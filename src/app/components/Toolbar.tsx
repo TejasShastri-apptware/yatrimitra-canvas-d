@@ -79,17 +79,6 @@ export function Toolbar({ selectedTool, onToolChange, onClear, onRotateSelected,
         </Button>
       </div>
 
-      <div className="ml-auto flex items-center gap-4">
-        <div className="flex items-center gap-2 text-xs text-slate-400">
-          <div className="px-2 py-1 bg-slate-800 rounded border border-slate-700">
-            <span className="text-slate-500">Tip:</span> Hold Alt + Drag to pan
-          </div>
-          <div className="px-2 py-1 bg-slate-800 rounded border border-slate-700">
-            <span className="text-slate-500">Delete:</span> Select + Backspace
-          </div>
-        </div>
-      </div>
-
       <SaveLoadPanel elements={elements} onLoadElements={onLoadElements} />
     </div>
   );
