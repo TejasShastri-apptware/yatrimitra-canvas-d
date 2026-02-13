@@ -1,5 +1,5 @@
 import React from 'react';
-import { Square, DoorOpen, Maximize2, Camera, MousePointer2, Hand, Trash2, RotateCw, Minus, Pencil, LucideIcon, MousePointer2Icon, ZoomIn, ZoomOut } from 'lucide-react';
+import { Square, DoorOpen, Maximize2, Camera, MousePointer2, Hand, Trash2, RotateCw, Minus, Pencil, LucideIcon, MousePointer2Icon, ZoomIn, ZoomOut, Type } from 'lucide-react';
 import type { Tool, FloorPlanElement } from '../types/floorplan';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
@@ -45,7 +45,8 @@ const toolgroup: ToolGroup[] = [
     label: "Structures",
     tools: [
       { id: 'room' as Tool, icon: Square, label: 'Room' },
-      { id: 'wall' as Tool, icon: Minus, label: 'Wall' }
+      { id: 'wall' as Tool, icon: Minus, label: 'Wall' },
+      { id: 'text' as Tool, icon: Type, label: 'Text' }
     ]
   },
   {

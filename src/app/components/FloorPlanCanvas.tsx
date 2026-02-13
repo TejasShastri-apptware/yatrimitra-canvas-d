@@ -34,6 +34,7 @@ import {
   drawCamera,
   drawWall,
   drawPencilPath,
+  drawTextBlock,
 } from '../utils/drawing';
 import { findElementAtPoint } from '../utils/selection';
 import {
@@ -65,6 +66,9 @@ export function FloorPlanCanvas({
   const [panOffset, setPanOffset] = useState<Point>({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState<Point | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartPoint, setDragStartPoint] = useState<Point | null>(null);
+  const [draggedElementStartPos, setDraggedElementStartPos] = useState<any>(null);
 
   // Main rendering effect
   useEffect(() => {
@@ -107,6 +111,9 @@ export function FloorPlanCanvas({
           break;
         case 'pencil':
           drawPencilPath(ctx, element, panOffset, isSelected, zoom);
+          break;
+        case 'text':
+          drawTextBlock(ctx, element, panOffset, isSelected, zoom);
           break;
       }
     });
@@ -185,9 +192,27 @@ export function FloorPlanCanvas({
     }
 
     if (selectedTool === 'select') {
-      const clicked = findElementAtPoint(point, elements, panOffset);
+      const clicked = findElementAtPoint(point, elements, panOffset, zoom);
       setSelectedElement(clicked ? clicked.id : null);
       onSelectedElementChange?.(clicked ? clicked.id : null);
+
+      // Start dragging if an element is selected
+      if (clicked) {
+        setIsDragging(true);
+        setDragStartPoint(point);
+        // Store the original position of the element
+        if (clicked.type === 'room') {
+          setDraggedElementStartPos({ x: clicked.x, y: clicked.y });
+        } else if (clicked.type === 'wall') {
+          setDraggedElementStartPos({ x1: clicked.x1, y1: clicked.y1, x2: clicked.x2, y2: clicked.y2 });
+        } else if (clicked.type === 'pencil') {
+          setDraggedElementStartPos({ points: [...clicked.points] });
+        } else if (clicked.type === 'text') {
+          setDraggedElementStartPos({ x: clicked.x, y: clicked.y });
+        } else {
+          setDraggedElementStartPos({ x: clicked.x, y: clicked.y });
+        }
+      }
       return;
     }
 
@@ -217,6 +242,18 @@ export function FloorPlanCanvas({
             : { id: Date.now().toString(), type: 'camera', x: snapped.x, y: snapped.y, rotation: 0 };
 
       onElementsChange([...elements, newElement]);
+    } else if (selectedTool === 'text') {
+      const snapped = snapToGrid({ x: (point.x - panOffset.x) / zoom, y: (point.y - panOffset.y) / zoom });
+      const newText: FloorPlanElement = {
+        id: Date.now().toString(),
+        type: 'text',
+        x: snapped.x,
+        y: snapped.y,
+        text: 'New Text',
+        fontSize: 16,
+        color: '#ffffff'
+      };
+      onElementsChange([...elements, newText]);
     }
   };
 
@@ -229,6 +266,45 @@ export function FloorPlanCanvas({
         y: panOffset.y + (point.y - panStart.y),
       });
       setPanStart(point);
+      return;
+    }
+
+    // Handle dragging selected element
+    if (isDragging && dragStartPoint && selectedElement && draggedElementStartPos) {
+      const deltaX = (point.x - dragStartPoint.x) / zoom;
+      const deltaY = (point.y - dragStartPoint.y) / zoom;
+
+      const updatedElements = elements.map((el) => {
+        if (el.id === selectedElement) {
+          if (el.type === 'room') {
+            return { ...el, x: draggedElementStartPos.x + deltaX, y: draggedElementStartPos.y + deltaY };
+          } else if (el.type === 'wall') {
+            return {
+              ...el,
+              x1: draggedElementStartPos.x1 + deltaX,
+              y1: draggedElementStartPos.y1 + deltaY,
+              x2: draggedElementStartPos.x2 + deltaX,
+              y2: draggedElementStartPos.y2 + deltaY,
+            };
+          } else if (el.type === 'pencil') {
+            return {
+              ...el,
+              points: draggedElementStartPos.points.map((p: Point) => ({
+                x: p.x + deltaX,
+                y: p.y + deltaY,
+              })),
+            };
+          } else if (el.type === 'text') {
+            return { ...el, x: draggedElementStartPos.x + deltaX, y: draggedElementStartPos.y + deltaY };
+          } else {
+            // Door, Window, Camera
+            return { ...el, x: draggedElementStartPos.x + deltaX, y: draggedElementStartPos.y + deltaY };
+          }
+        }
+        return el;
+      });
+
+      onElementsChange(updatedElements);
       return;
     }
 
@@ -248,6 +324,13 @@ export function FloorPlanCanvas({
     if (isPanning) {
       setIsPanning(false);
       setPanStart(null);
+      return;
+    }
+
+    if (isDragging) {
+      setIsDragging(false);
+      setDragStartPoint(null);
+      setDraggedElementStartPos(null);
       return;
     }
 

@@ -39,7 +39,7 @@ export default function App() {
         if (el.id === selectedElementId && 'rotation' in el) {
           return {
             ...el,
-            rotation: (el.rotation + 45) % 360,
+            rotation: (el.rotation) % 360,
           };
         }
         return el;
@@ -86,6 +86,9 @@ export default function App() {
           break;
         case 'h':
           setSelectedTool('pan');
+          break;
+        case 't':
+          setSelectedTool('text');
           break;
         case 'delete':
         case 'backspace':

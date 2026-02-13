@@ -9,6 +9,7 @@ import {
     Camera,
     Wall,
     PencilPath,
+    TextBlock,
     Point,
 } from '../types/floorplan';
 import {
@@ -61,8 +62,9 @@ export function drawRoom(
     isSelected: boolean,
     zoom: number = 1
 ): void {
-    ctx.strokeStyle = isSelected ? COLORS.selected : COLORS.room;
-    ctx.fillStyle = COLORS.roomFill;
+    const strokeColor = isSelected ? COLORS.selected : (room.color || COLORS.room);
+    ctx.strokeStyle = strokeColor;
+    ctx.fillStyle = room.color ? `${room.color}1a` : COLORS.roomFill; // Add transparency to custom colors
     ctx.lineWidth = isSelected ? 3 : 2;
 
     const x = room.x * zoom + panOffset.x;
@@ -228,7 +230,7 @@ export function drawWall(
     isSelected: boolean,
     zoom: number = 1
 ): void {
-    ctx.strokeStyle = isSelected ? COLORS.selected : COLORS.wall;
+    ctx.strokeStyle = isSelected ? COLORS.selected : (wall.color || COLORS.wall);
     ctx.lineWidth = wall.thickness;
     ctx.lineCap = 'round';
 
@@ -285,5 +287,39 @@ export function drawPencilPath(
     if (isSelected) {
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
+    }
+}
+
+/**
+ * Draws a text block element
+ */
+export function drawTextBlock(
+    ctx: CanvasRenderingContext2D,
+    textBlock: TextBlock,
+    panOffset: Point,
+    isSelected: boolean,
+    zoom: number = 1
+): void {
+    const x = textBlock.x * zoom + panOffset.x;
+    const y = textBlock.y * zoom + panOffset.y;
+    const fontSize = (textBlock.fontSize || 16) * zoom;
+    const text = textBlock.text || 'Text';
+
+    ctx.font = `${fontSize}px ${textBlock.fontFamily || 'monospace'}`;
+    ctx.fillStyle = isSelected ? COLORS.selected : (textBlock.color || '#ffffff');
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+
+    // Draw text
+    ctx.fillText(text, x, y);
+
+    // Draw selection box if selected
+    if (isSelected) {
+        const metrics = ctx.measureText(text);
+        ctx.strokeStyle = COLORS.selected;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.strokeRect(x - 2, y - 2, metrics.width + 4, fontSize + 4);
+        ctx.setLineDash([]);
     }
 }

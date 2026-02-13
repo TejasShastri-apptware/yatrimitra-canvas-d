@@ -2,7 +2,7 @@
  * Type definitions for the Floor Plan Designer application
  */
 
-export type Tool = 'select' | 'room' | 'door' | 'window' | 'camera' | 'wall' | 'pencil' | 'pan';
+export type Tool = 'select' | 'room' | 'door' | 'window' | 'camera' | 'wall' | 'pencil' | 'pan' | 'text';
 
 export interface Point {
     x: number;
@@ -17,6 +17,7 @@ export interface Room {
     width: number;
     height: number;
     name?: string;
+    color?: string;
 }
 
 export interface Door {
@@ -51,6 +52,7 @@ export interface Wall {
     x2: number;
     y2: number;
     thickness: number;
+    color?: string;
 }
 
 export interface PencilPath {
@@ -61,7 +63,18 @@ export interface PencilPath {
     lineWidth: number;
 }
 
-export type FloorPlanElement = Room | Door | Window | Camera | Wall | PencilPath;
+export interface TextBlock {
+    id: string;
+    type: 'text';
+    x: number;
+    y: number;
+    text: string;
+    fontSize?: number;
+    color?: string;
+    fontFamily?: string;
+}
+
+export type FloorPlanElement = Room | Door | Window | Camera | Wall | PencilPath | TextBlock;
 
 export interface FloorPlanCanvasProps {
     selectedTool: Tool;
