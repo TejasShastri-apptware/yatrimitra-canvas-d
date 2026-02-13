@@ -38,7 +38,7 @@ type ToolGroup = {
 
 const toolgroup: ToolGroup[] = [
   {
-    label: "Structure",
+    label: "Structures",
     tools: [
       { id: 'room' as Tool, icon: Square, label: 'Room' },
       { id: 'wall' as Tool, icon: Minus, label: 'Wall' }
@@ -70,46 +70,63 @@ export function Toolbar({ selectedTool, onToolChange, onClear, onRotateSelected,
   return (
     <div className="bg-slate-900 border-b border-slate-700 px-4 py-3 flex items-center gap-2">
       <div className='flex items-center gap-1'>
-        <Button variant="ghost" size="sm" className='text-slate-300 hover:text-white hover:bg-slate-800' onSelect={() => onToolChange('select')}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={`h-10 transition-all duration-200 ${selectedTool === 'select' ? 'bg-slate-800 text-white' : 'text-slate-300 hover:text-white hover:bg-slate-800'}`}
+          onClick={() => onToolChange('select')}
+        >
           <MousePointer2 className="h-4 w-4" />
           <span className="ml-2">Select</span>
         </Button>
       </div>
 
       <div className="flex items-center gap-1">
-        {toolgroup.map((group) => (
-          <DropdownMenu key={group.label}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">
-                <span>{group.label}</span>
-              </Button>
-            </DropdownMenuTrigger>
+        {toolgroup.map((group) => {
+          const activeGroup = group.tools.some((tool) => tool.id === selectedTool);
 
-            <DropdownMenuContent className='w-48'>
-              <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
-              {group.tools.map((tool) => {
-                const Icon = tool.icon;
-                return (
-                  <DropdownMenuItem key={tool.id} onSelect={() => onToolChange(tool.id)} className={selectedTool == tool.id ? 'bg-slate-800 text-white' : ""}>
-                    <Icon className="h-4 w-4" />
-                    <span className="ml-2">{tool.label}</span>
-                  </DropdownMenuItem>
-                )
-              })}
+          return (
+            <DropdownMenu key={group.label}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className={`h-10 text-slate-300 hover:text-white hover:bg-slate-800 ${activeGroup ? "bg-slate-800 text-white" : "text-slate-300 hover:text-white hover:bg-slate-800"}`}>
+                  <span>{group.label}</span>
+                </Button>
+              </DropdownMenuTrigger>
 
-            </DropdownMenuContent>
+              <DropdownMenuContent className='w-48'>
+                <DropdownMenuLabel>{group.label}</DropdownMenuLabel>
+                {group.tools.map((tool) => {
+                  const Icon = tool.icon;
+                  return (
+                    <DropdownMenuItem key={tool.id} onSelect={() => onToolChange(tool.id)} className={selectedTool == tool.id ? 'bg-slate-800 text-white' : ""}>
+                      <Icon className="h-4 w-4" />
+                      <span className="ml-2">{tool.label}</span>
+                    </DropdownMenuItem>
+                  )
+                })}
 
-          </DropdownMenu>
-        ))}
+              </DropdownMenuContent>
+
+            </DropdownMenu>
+          )
+        })}
+
       </div>
 
       <Separator orientation="vertical" className="h-8 bg-slate-700" />
 
       <div className='flex items-center gap-1'>
-        <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800"
+        <Button
+          variant="ghost"
+          size="sm"
+          className={`group disabled:opacity-50 transition-all duration-200 h-10 ${selectedTool === 'pencil' ? 'bg-slate-800 text-white' : 'text-slate-300 hover:text-white hover:bg-slate-800'}`}
           onClick={() => onToolChange('pencil')}
         >
-          <Pencil size={20} className="text-amber-100" />
+          <Pencil size={20} className="fill-[#f2fb77] text-black
+            transition-all duration-300 ease-out
+            group-hover:scale-125
+            group-hover:drop-shadow-[0_0_10px_rgba(242,251,119,0.8)]
+          " />
           <span className="ml-2">Pencil</span>
         </Button>
       </div>
@@ -133,14 +150,16 @@ export function Toolbar({ selectedTool, onToolChange, onClear, onRotateSelected,
           size="sm"
           onClick={onClear}
           disabled={!hasElements}
-          className="group text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-50 transition-all duration-200"
+          className="h-10 group text-slate-300 hover:text-white hover:bg-slate-800 disabled:opacity-50 transition-all duration-200"
           title="Clear All"
         >
           <Trash2
             className="
             h-5 w-5
             text-red-500
+            fill-transparent {/* HOVER-FILL DOES NOT WORK WITHOUT THIS DUE TO HOW TAILWIND TREATS LUCIDE ICONS */}
             transition-all duration-300 ease-out
+            group-hover:fill-red-500
             group-hover:scale-125
             group-hover:drop-shadow-[0_0_6px_rgba(255,0,0,0.6)]
           "

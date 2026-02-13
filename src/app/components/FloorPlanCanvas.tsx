@@ -116,8 +116,9 @@ export function FloorPlanCanvas({
         ctx.fillStyle = 'rgba(96, 165, 250, 0.1)';
         ctx.lineWidth = 2;
         ctx.setLineDash([5, 5]);
-        ctx.strokeRect(startPoint.x, startPoint.y, width, height);
-        ctx.fillRect(startPoint.x, startPoint.y, width, height);
+        // Apply pan offset to convert world coordinates to screen coordinates
+        ctx.strokeRect(startPoint.x + panOffset.x, startPoint.y + panOffset.y, width, height);
+        ctx.fillRect(startPoint.x + panOffset.x, startPoint.y + panOffset.y, width, height);
         ctx.setLineDash([]);
       } else if (selectedTool === 'wall') {
         ctx.strokeStyle = COLORS.wall;
@@ -127,8 +128,9 @@ export function FloorPlanCanvas({
         ctx.setLineDash([5, 5]);
 
         ctx.beginPath();
-        ctx.moveTo(startPoint.x, startPoint.y);
-        ctx.lineTo(currentPoint.x, currentPoint.y);
+        // Apply pan offset to convert world coordinates to screen coordinates
+        ctx.moveTo(startPoint.x + panOffset.x, startPoint.y + panOffset.y);
+        ctx.lineTo(currentPoint.x + panOffset.x, currentPoint.y + panOffset.y);
         ctx.stroke();
 
         ctx.setLineDash([]);
@@ -145,10 +147,11 @@ export function FloorPlanCanvas({
       ctx.globalAlpha = 0.8;
 
       ctx.beginPath();
-      ctx.moveTo(pencilPoints[0].x, pencilPoints[0].y);
+      // Apply pan offset to convert world coordinates to screen coordinates
+      ctx.moveTo(pencilPoints[0].x + panOffset.x, pencilPoints[0].y + panOffset.y);
 
       for (let i = 1; i < pencilPoints.length; i++) {
-        ctx.lineTo(pencilPoints[i].x, pencilPoints[i].y);
+        ctx.lineTo(pencilPoints[i].x + panOffset.x, pencilPoints[i].y + panOffset.y);
       }
 
       ctx.stroke();
