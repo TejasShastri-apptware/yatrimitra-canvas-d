@@ -42,6 +42,9 @@ import {
   DEFAULT_PENCIL_COLOR,
   DEFAULT_PENCIL_LINE_WIDTH,
   COLORS,
+  MIN_ZOOM,
+  MAX_ZOOM,
+  ZOOM_STEP,
 } from '../utils/constants';
 
 export function FloorPlanCanvas({
@@ -50,6 +53,8 @@ export function FloorPlanCanvas({
   onElementsChange,
   selectedElementId,
   onSelectedElementChange,
+  zoom = 1,
+  onZoomChange,
 }: FloorPlanCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -78,7 +83,7 @@ export function FloorPlanCanvas({
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw grid
-    drawGrid(ctx, canvas.width, canvas.height, panOffset);
+    drawGrid(ctx, canvas.width, canvas.height, panOffset, zoom);
 
     // Draw all elements
     elements.forEach((element) => {
@@ -86,22 +91,22 @@ export function FloorPlanCanvas({
 
       switch (element.type) {
         case 'room':
-          drawRoom(ctx, element, panOffset, isSelected);
+          drawRoom(ctx, element, panOffset, isSelected, zoom);
           break;
         case 'door':
-          drawDoor(ctx, element, panOffset, isSelected);
+          drawDoor(ctx, element, panOffset, isSelected, zoom);
           break;
         case 'window':
-          drawWindow(ctx, element, panOffset, isSelected);
+          drawWindow(ctx, element, panOffset, isSelected, zoom);
           break;
         case 'camera':
-          drawCamera(ctx, element, panOffset, isSelected);
+          drawCamera(ctx, element, panOffset, isSelected, zoom);
           break;
         case 'wall':
-          drawWall(ctx, element, panOffset, isSelected);
+          drawWall(ctx, element, panOffset, isSelected, zoom);
           break;
         case 'pencil':
-          drawPencilPath(ctx, element, panOffset, isSelected);
+          drawPencilPath(ctx, element, panOffset, isSelected, zoom);
           break;
       }
     });
@@ -116,9 +121,9 @@ export function FloorPlanCanvas({
         ctx.fillStyle = 'rgba(96, 165, 250, 0.1)';
         ctx.lineWidth = 2;
         ctx.setLineDash([5, 5]);
-        // Apply pan offset to convert world coordinates to screen coordinates
-        ctx.strokeRect(startPoint.x + panOffset.x, startPoint.y + panOffset.y, width, height);
-        ctx.fillRect(startPoint.x + panOffset.x, startPoint.y + panOffset.y, width, height);
+        // Apply pan offset and zoom to convert world coordinates to screen coordinates
+        ctx.strokeRect(startPoint.x * zoom + panOffset.x, startPoint.y * zoom + panOffset.y, width * zoom, height * zoom);
+        ctx.fillRect(startPoint.x * zoom + panOffset.x, startPoint.y * zoom + panOffset.y, width * zoom, height * zoom);
         ctx.setLineDash([]);
       } else if (selectedTool === 'wall') {
         ctx.strokeStyle = COLORS.wall;
@@ -128,9 +133,9 @@ export function FloorPlanCanvas({
         ctx.setLineDash([5, 5]);
 
         ctx.beginPath();
-        // Apply pan offset to convert world coordinates to screen coordinates
-        ctx.moveTo(startPoint.x + panOffset.x, startPoint.y + panOffset.y);
-        ctx.lineTo(currentPoint.x + panOffset.x, currentPoint.y + panOffset.y);
+        // Apply pan offset and zoom to convert world coordinates to screen coordinates
+        ctx.moveTo(startPoint.x * zoom + panOffset.x, startPoint.y * zoom + panOffset.y);
+        ctx.lineTo(currentPoint.x * zoom + panOffset.x, currentPoint.y * zoom + panOffset.y);
         ctx.stroke();
 
         ctx.setLineDash([]);
@@ -147,17 +152,17 @@ export function FloorPlanCanvas({
       ctx.globalAlpha = 0.8;
 
       ctx.beginPath();
-      // Apply pan offset to convert world coordinates to screen coordinates
-      ctx.moveTo(pencilPoints[0].x + panOffset.x, pencilPoints[0].y + panOffset.y);
+      // Apply pan offset and zoom to convert world coordinates to screen coordinates
+      ctx.moveTo(pencilPoints[0].x * zoom + panOffset.x, pencilPoints[0].y * zoom + panOffset.y);
 
       for (let i = 1; i < pencilPoints.length; i++) {
-        ctx.lineTo(pencilPoints[i].x + panOffset.x, pencilPoints[i].y + panOffset.y);
+        ctx.lineTo(pencilPoints[i].x * zoom + panOffset.x, pencilPoints[i].y * zoom + panOffset.y);
       }
 
       ctx.stroke();
       ctx.globalAlpha = 1;
     }
-  }, [elements, selectedElement, isDrawing, startPoint, currentPoint, selectedTool, panOffset, pencilPoints]);
+  }, [elements, selectedElement, isDrawing, startPoint, currentPoint, selectedTool, panOffset, pencilPoints, zoom]);
 
   const getCanvasPoint = (e: React.MouseEvent<HTMLCanvasElement>): Point => {
     const canvas = canvasRef.current;
@@ -187,23 +192,23 @@ export function FloorPlanCanvas({
     }
 
     if (selectedTool === 'room') {
-      const snapped = snapToGrid({ x: point.x - panOffset.x, y: point.y - panOffset.y });
+      const snapped = snapToGrid({ x: (point.x - panOffset.x) / zoom, y: (point.y - panOffset.y) / zoom });
       setIsDrawing(true);
       setStartPoint(snapped);
       setCurrentPoint(snapped);
     } else if (selectedTool === 'wall') {
-      const snapped = snapToGrid({ x: point.x - panOffset.x, y: point.y - panOffset.y });
+      const snapped = snapToGrid({ x: (point.x - panOffset.x) / zoom, y: (point.y - panOffset.y) / zoom });
       setIsDrawing(true);
       setStartPoint(snapped);
       setCurrentPoint(snapped);
     } else if (selectedTool === 'pencil') {
-      const unsnapped = { x: point.x - panOffset.x, y: point.y - panOffset.y };
+      const unsnapped = { x: (point.x - panOffset.x) / zoom, y: (point.y - panOffset.y) / zoom };
       setIsDrawing(true);
       setStartPoint(unsnapped);
       setCurrentPoint(unsnapped);
       setPencilPoints([unsnapped]);
     } else if (selectedTool === 'door' || selectedTool === 'window' || selectedTool === 'camera') {
-      const snapped = snapToGrid({ x: point.x - panOffset.x, y: point.y - panOffset.y });
+      const snapped = snapToGrid({ x: (point.x - panOffset.x) / zoom, y: (point.y - panOffset.y) / zoom });
       const newElement: FloorPlanElement =
         selectedTool === 'door'
           ? { id: Date.now().toString(), type: 'door', x: snapped.x, y: snapped.y, rotation: 0 }
@@ -229,10 +234,10 @@ export function FloorPlanCanvas({
 
     if (isDrawing && startPoint) {
       if (selectedTool === 'room' || selectedTool === 'wall') {
-        const snapped = snapToGrid({ x: point.x - panOffset.x, y: point.y - panOffset.y });
+        const snapped = snapToGrid({ x: (point.x - panOffset.x) / zoom, y: (point.y - panOffset.y) / zoom });
         setCurrentPoint(snapped);
       } else if (selectedTool === 'pencil') {
-        const unsnapped = { x: point.x - panOffset.x, y: point.y - panOffset.y };
+        const unsnapped = { x: (point.x - panOffset.x) / zoom, y: (point.y - panOffset.y) / zoom };
         setPencilPoints((prev) => [...prev, unsnapped]);
         setCurrentPoint(unsnapped);
       }
@@ -311,6 +316,13 @@ export function FloorPlanCanvas({
     }
   };
 
+  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+    const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom + delta));
+    onZoomChange?.(newZoom);
+  };
+
   return (
     <canvas
       ref={canvasRef}
@@ -318,6 +330,7 @@ export function FloorPlanCanvas({
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      onWheel={handleWheel}
       onKeyDown={handleKeyDown}
       tabIndex={0}
       style={{ cursor: selectedTool === 'pan' || isPanning ? 'grab' : 'crosshair' }}

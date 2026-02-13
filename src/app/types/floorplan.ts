@@ -69,4 +69,6 @@ export interface FloorPlanCanvasProps {
     onElementsChange: (elements: FloorPlanElement[]) => void;
     selectedElementId?: string | null;
     onSelectedElementChange?: (id: string | null) => void;
+    zoom?: number;
+    onZoomChange?: (zoom: number) => void;
 }

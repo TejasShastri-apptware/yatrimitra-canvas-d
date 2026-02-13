@@ -1,5 +1,5 @@
 import React from 'react';
-import { Square, DoorOpen, Maximize2, Camera, MousePointer2, Hand, Trash2, RotateCw, Minus, Pencil, LucideIcon, MousePointer2Icon } from 'lucide-react';
+import { Square, DoorOpen, Maximize2, Camera, MousePointer2, Hand, Trash2, RotateCw, Minus, Pencil, LucideIcon, MousePointer2Icon, ZoomIn, ZoomOut } from 'lucide-react';
 import type { Tool, FloorPlanElement } from '../types/floorplan';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
@@ -24,6 +24,10 @@ interface ToolbarProps {
   hasElements: boolean;
   elements: FloorPlanElement[];
   onLoadElements: (elements: FloorPlanElement[]) => void;
+  zoom: number;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onZoomReset: () => void;
 }
 
 type ToolSK = {
@@ -55,7 +59,7 @@ const toolgroup: ToolGroup[] = [
 ]
 
 
-export function Toolbar({ selectedTool, onToolChange, onClear, onRotateSelected, hasElements, elements, onLoadElements }: ToolbarProps) {
+export function Toolbar({ selectedTool, onToolChange, onClear, onRotateSelected, hasElements, elements, onLoadElements, zoom, onZoomIn, onZoomOut, onZoomReset }: ToolbarProps) {
   const tools = [
     { id: 'select' as Tool, icon: MousePointer2, label: 'Select', shortcut: 'V' },
     { id: 'wall' as Tool, icon: Minus, label: 'Wall', shortcut: 'L' },
@@ -128,6 +132,39 @@ export function Toolbar({ selectedTool, onToolChange, onClear, onRotateSelected,
             group-hover:drop-shadow-[0_0_10px_rgba(242,251,119,0.8)]
           " />
           <span className="ml-2">Pencil</span>
+        </Button>
+      </div>
+
+      <Separator orientation="vertical" className="h-8 bg-slate-700" />
+
+      {/* Zoom Controls */}
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onZoomOut}
+          className="h-10 text-slate-300 hover:text-white hover:bg-slate-800"
+          title="Zoom Out"
+        >
+          <ZoomOut className="h-4 w-4" />
+        </Button>
+
+        <button
+          onClick={onZoomReset}
+          className="h-10 px-3 text-xs font-mono text-slate-300 hover:text-white hover:bg-slate-800 rounded transition-colors"
+          title="Reset Zoom (Click to reset to 100%)"
+        >
+          {Math.round(zoom * 100)}%
+        </button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onZoomIn}
+          className="h-10 text-slate-300 hover:text-white hover:bg-slate-800"
+          title="Zoom In"
+        >
+          <ZoomIn className="h-4 w-4" />
         </Button>
       </div>
 

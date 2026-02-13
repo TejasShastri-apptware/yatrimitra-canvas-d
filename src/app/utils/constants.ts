@@ -10,6 +10,11 @@ export const DEFAULT_WALL_THICKNESS = 2;
 export const DEFAULT_PENCIL_LINE_WIDTH = 2;
 export const DEFAULT_PENCIL_COLOR = '#60a5fa';
 
+// Zoom constants
+export const MIN_ZOOM = 0.25;
+export const MAX_ZOOM = 3;
+export const ZOOM_STEP = 0.1;
+
 // Canvas colors
 export const COLORS = {
     background: '#0a1929',

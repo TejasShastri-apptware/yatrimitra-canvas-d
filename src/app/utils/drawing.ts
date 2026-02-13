@@ -26,19 +26,24 @@ export function drawGrid(
     ctx: CanvasRenderingContext2D,
     width: number,
     height: number,
-    panOffset: Point
+    panOffset: Point,
+    zoom: number = 1
 ): void {
     ctx.strokeStyle = COLORS.grid;
     ctx.lineWidth = 1;
 
-    for (let x = panOffset.x % GRID_SIZE; x < width; x += GRID_SIZE) {
+    const scaledGridSize = GRID_SIZE * zoom;
+    const offsetX = panOffset.x % scaledGridSize;
+    const offsetY = panOffset.y % scaledGridSize;
+
+    for (let x = offsetX; x < width; x += scaledGridSize) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, height);
         ctx.stroke();
     }
 
-    for (let y = panOffset.y % GRID_SIZE; y < height; y += GRID_SIZE) {
+    for (let y = offsetY; y < height; y += scaledGridSize) {
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(width, y);
@@ -53,34 +58,40 @@ export function drawRoom(
     ctx: CanvasRenderingContext2D,
     room: Room,
     panOffset: Point,
-    isSelected: boolean
+    isSelected: boolean,
+    zoom: number = 1
 ): void {
     ctx.strokeStyle = isSelected ? COLORS.selected : COLORS.room;
     ctx.fillStyle = COLORS.roomFill;
     ctx.lineWidth = isSelected ? 3 : 2;
 
-    ctx.fillRect(room.x + panOffset.x, room.y + panOffset.y, room.width, room.height);
-    ctx.strokeRect(room.x + panOffset.x, room.y + panOffset.y, room.width, room.height);
+    const x = room.x * zoom + panOffset.x;
+    const y = room.y * zoom + panOffset.y;
+    const width = room.width * zoom;
+    const height = room.height * zoom;
 
-    const centerX = room.x + panOffset.x + room.width / 2;
-    const centerY = room.y + panOffset.y + room.height / 2;
+    ctx.fillRect(x, y, width, height);
+    ctx.strokeRect(x, y, width, height);
+
+    const centerX = x + width / 2;
+    const centerY = y + height / 2;
 
     // Add room name in bright yellow if it exists
     if (room.name) {
         ctx.fillStyle = COLORS.roomName;
-        ctx.font = 'bold 14px monospace';
+        ctx.font = `bold ${14 * zoom}px monospace`;
         ctx.textAlign = 'center';
-        ctx.fillText(room.name, centerX, centerY - 10);
+        ctx.fillText(room.name, centerX, centerY - 10 * zoom);
     }
 
     // Add dimension labels
     ctx.fillStyle = COLORS.label;
-    ctx.font = '12px monospace';
+    ctx.font = `${12 * zoom}px monospace`;
     ctx.textAlign = 'center';
     ctx.fillText(
         `${Math.abs(Math.round(room.width / GRID_SIZE))}x${Math.abs(Math.round(room.height / GRID_SIZE))}`,
         centerX,
-        room.name ? centerY + 10 : centerY
+        room.name ? centerY + 10 * zoom : centerY
     );
 }
 
@@ -91,11 +102,13 @@ export function drawDoor(
     ctx: CanvasRenderingContext2D,
     door: Door,
     panOffset: Point,
-    isSelected: boolean
+    isSelected: boolean,
+    zoom: number = 1
 ): void {
     ctx.save();
-    ctx.translate(door.x + panOffset.x, door.y + panOffset.y);
+    ctx.translate(door.x * zoom + panOffset.x, door.y * zoom + panOffset.y);
     ctx.rotate((door.rotation * Math.PI) / 180);
+    ctx.scale(zoom, zoom);
 
     // Door frame
     ctx.strokeStyle = isSelected ? COLORS.selected : COLORS.door;
@@ -130,11 +143,13 @@ export function drawWindow(
     ctx: CanvasRenderingContext2D,
     window: Window,
     panOffset: Point,
-    isSelected: boolean
+    isSelected: boolean,
+    zoom: number = 1
 ): void {
     ctx.save();
-    ctx.translate(window.x + panOffset.x, window.y + panOffset.y);
+    ctx.translate(window.x * zoom + panOffset.x, window.y * zoom + panOffset.y);
     ctx.rotate((window.rotation * Math.PI) / 180);
+    ctx.scale(zoom, zoom);
 
     // Window frame
     ctx.strokeStyle = isSelected ? COLORS.selected : COLORS.window;
@@ -168,11 +183,13 @@ export function drawCamera(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
     panOffset: Point,
-    isSelected: boolean
+    isSelected: boolean,
+    zoom: number = 1
 ): void {
     ctx.save();
-    ctx.translate(camera.x + panOffset.x, camera.y + panOffset.y);
+    ctx.translate(camera.x * zoom + panOffset.x, camera.y * zoom + panOffset.y);
     ctx.rotate((camera.rotation * Math.PI) / 180);
+    ctx.scale(zoom, zoom);
 
     // Camera view cone
     ctx.fillStyle = isSelected ? 'rgba(96, 165, 250, 0.15)' : 'rgba(34, 197, 94, 0.1)';
@@ -208,25 +225,26 @@ export function drawWall(
     ctx: CanvasRenderingContext2D,
     wall: Wall,
     panOffset: Point,
-    isSelected: boolean
+    isSelected: boolean,
+    zoom: number = 1
 ): void {
     ctx.strokeStyle = isSelected ? COLORS.selected : COLORS.wall;
     ctx.lineWidth = wall.thickness;
     ctx.lineCap = 'round';
 
     ctx.beginPath();
-    ctx.moveTo(wall.x1 + panOffset.x, wall.y1 + panOffset.y);
-    ctx.lineTo(wall.x2 + panOffset.x, wall.y2 + panOffset.y);
+    ctx.moveTo(wall.x1 * zoom + panOffset.x, wall.y1 * zoom + panOffset.y);
+    ctx.lineTo(wall.x2 * zoom + panOffset.x, wall.y2 * zoom + panOffset.y);
     ctx.stroke();
 
     // Draw endpoints for selected wall
     if (isSelected) {
         ctx.fillStyle = COLORS.selected;
         ctx.beginPath();
-        ctx.arc(wall.x1 + panOffset.x, wall.y1 + panOffset.y, 4, 0, Math.PI * 2);
+        ctx.arc(wall.x1 * zoom + panOffset.x, wall.y1 * zoom + panOffset.y, 4 * zoom, 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(wall.x2 + panOffset.x, wall.y2 + panOffset.y, 4, 0, Math.PI * 2);
+        ctx.arc(wall.x2 * zoom + panOffset.x, wall.y2 * zoom + panOffset.y, 4 * zoom, 0, Math.PI * 2);
         ctx.fill();
     }
 }
@@ -238,7 +256,8 @@ export function drawPencilPath(
     ctx: CanvasRenderingContext2D,
     path: PencilPath,
     panOffset: Point,
-    isSelected: boolean
+    isSelected: boolean,
+    zoom: number = 1
 ): void {
     if (path.points.length < 2) return;
 
@@ -254,10 +273,10 @@ export function drawPencilPath(
     }
 
     ctx.beginPath();
-    ctx.moveTo(path.points[0].x + panOffset.x, path.points[0].y + panOffset.y);
+    ctx.moveTo(path.points[0].x * zoom + panOffset.x, path.points[0].y * zoom + panOffset.y);
 
     for (let i = 1; i < path.points.length; i++) {
-        ctx.lineTo(path.points[i].x + panOffset.x, path.points[i].y + panOffset.y);
+        ctx.lineTo(path.points[i].x * zoom + panOffset.x, path.points[i].y * zoom + panOffset.y);
     }
 
     ctx.stroke();

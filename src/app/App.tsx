@@ -3,6 +3,7 @@ import { FloorPlanCanvas } from './components/FloorPlanCanvas';
 import type { FloorPlanElement, Tool } from './types/floorplan';
 import { Toolbar } from './components/Toolbar';
 import { PropertiesPanel } from './components/PropertiesPanel';
+import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP } from './utils/constants';
 
 const AUTOSAVE_KEY = 'floorplan_autosave';
 
@@ -14,6 +15,7 @@ export default function App() {
     return autosaved ? JSON.parse(autosaved) : [];
   });
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const [zoom, setZoom] = useState<number>(1);
 
   const selectedElement = elements.find((el) => el.id === selectedElementId) || null;
 
@@ -48,6 +50,10 @@ export default function App() {
   const handleUpdateElement = (updatedElement: FloorPlanElement) => {
     setElements((prev) => prev.map((el) => (el.id === updatedElement.id ? updatedElement : el)));
   };
+
+  const handleZoomIn = () => setZoom((prev) => Math.min(MAX_ZOOM, prev + ZOOM_STEP));
+  const handleZoomOut = () => setZoom((prev) => Math.max(MIN_ZOOM, prev - ZOOM_STEP));
+  const handleZoomReset = () => setZoom(1);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -129,18 +135,24 @@ export default function App() {
         hasElements={elements.length > 0}
         elements={elements}
         onLoadElements={setElements}
+        zoom={zoom}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onZoomReset={handleZoomReset}
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 relative overflow-hidden">
         {/* Canvas Area */}
-        <div className="flex-1 relative">
+        <div className="absolute inset-0 right-80">
           <FloorPlanCanvas
             selectedTool={selectedTool}
             elements={elements}
             onElementsChange={setElements}
             selectedElementId={selectedElementId}
             onSelectedElementChange={setSelectedElementId}
+            zoom={zoom}
+            onZoomChange={setZoom}
           />
 
           {/* Legend */}
@@ -178,14 +190,14 @@ export default function App() {
         </div>
 
         {/* Properties Panel */}
-        <div className="bg-slate-950 border-l border-slate-700 p-4">
+        <div className="absolute top-0 right-0 bottom-0 w-80 bg-slate-950 border-l border-slate-700 p-4 overflow-y-auto">
           <PropertiesPanel selectedElement={selectedElement} onUpdateElement={handleUpdateElement} />
         </div>
       </div>
 
       {/* Footer */}
       <div className="bg-slate-900 border-t border-slate-700 px-6 py-2 text-xs text-slate-500 flex items-center justify-between">
-        <div>Blueprint Mode • Grid: 20px</div>
+        <div>Blueprint Mode • Grid: 20px • Zoom: {Math.round(zoom * 100)}%</div>
         <div className="flex items-center gap-4">
           <span>Click and drag to draw rooms</span>
           <span>•</span>

@@ -65,6 +65,8 @@ export function SaveLoadPanel({ elements, onLoadElements }: SaveLoadPanelProps) 
       onLoadElements(diagram.elements);
       setIsOpenLoad(false);
     }
+    onLoadElements(diagram.elements);
+      setIsOpenLoad(false);
   };
 
   const handleDeleteDiagram = (index: number) => {
@@ -103,9 +105,10 @@ export function SaveLoadPanel({ elements, onLoadElements }: SaveLoadPanelProps) 
       try {
         const data = JSON.parse(e.target?.result as string);
         if (data.elements && Array.isArray(data.elements)) {
-          if (window.confirm('Import this diagram? Current work will be replaced.')) {
-            onLoadElements(data.elements);
-          }
+          // if (window.confirm('Import this diagram? Current work will be replaced.')) {
+          //   onLoadElements(data.elements);
+          // }
+          onLoadElements(data.elements);
         } else {
           alert('Invalid file format');
         }
