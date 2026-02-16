@@ -1,7 +1,3 @@
-/**
- * Type definitions for the Floor Plan Designer application
- */
-
 export type Tool = 'select' | 'room' | 'door' | 'window' | 'camera' | 'wall' | 'pencil' | 'pan' | 'text';
 
 export interface Point {
@@ -76,12 +72,18 @@ export interface TextBlock {
 
 export type FloorPlanElement = Room | Door | Window | Camera | Wall | PencilPath | TextBlock;
 
+export interface MarqueeSelection {
+    startPoint: Point;
+    currentPoint: Point;
+    isActive: boolean;
+}
+
 export interface FloorPlanCanvasProps {
     selectedTool: Tool;
     elements: FloorPlanElement[];
     onElementsChange: (elements: FloorPlanElement[]) => void;
-    selectedElementId?: string | null;
-    onSelectedElementChange?: (id: string | null) => void;
+    selectedElementIds?: string[];
+    onSelectedElementChange?: (ids: string[]) => void;
     zoom?: number;
     onZoomChange?: (zoom: number) => void;
 }

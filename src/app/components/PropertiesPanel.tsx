@@ -17,6 +17,7 @@ export function PropertiesPanel({ selectedElement, onUpdateElement }: Properties
         <div className="text-slate-400 text-sm text-center">
           <p>No element selected</p>
           <p className="text-xs mt-2">Select an element to view properties</p>
+          <p className="text-xs mt-4 text-blue-400">💡 Tip: Use Shift+Click or drag to select multiple elements</p>
         </div>
       </Card>
     );

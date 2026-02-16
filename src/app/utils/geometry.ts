@@ -1,13 +1,9 @@
-/**
- * Geometry utility functions for the Floor Plan Designer
- */
+// geometry utility functions for the Floor Plan Designer
 
 import { Point } from '../types/floorplan';
 import { GRID_SIZE } from './constants';
 
-/**
- * Snaps a point to the nearest grid intersection
- */
+// snap to grid
 export function snapToGrid(point: Point): Point {
     return {
         x: Math.round(point.x / GRID_SIZE) * GRID_SIZE,
@@ -15,9 +11,7 @@ export function snapToGrid(point: Point): Point {
     };
 }
 
-/**
- * Calculates the distance from a point to a line segment
- */
+// point to line distance calculation
 export function pointToLineDistance(
     point: Point,
     lineStart: Point,
@@ -51,9 +45,7 @@ export function pointToLineDistance(
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-/**
- * Checks if a point is inside a rectangle
- */
+// point in rectangle check
 export function isPointInRect(
     point: Point,
     rect: { x: number; y: number; width: number; height: number }
@@ -66,9 +58,7 @@ export function isPointInRect(
     );
 }
 
-/**
- * Checks if a point is near a line segment within a threshold
- */
+// point near line check
 export function isPointNearLine(
     point: Point,
     lineStart: Point,
@@ -78,9 +68,7 @@ export function isPointNearLine(
     return pointToLineDistance(point, lineStart, lineEnd) < threshold;
 }
 
-/**
- * Checks if a point is near any segment of a path
- */
+// point near path check
 export function isPointNearPath(
     point: Point,
     path: Point[],
@@ -94,11 +82,32 @@ export function isPointNearPath(
     return false;
 }
 
-/**
- * Calculates the distance between two points
- */
+
+// distance calculation
 export function distance(p1: Point, p2: Point): number {
     const dx = p2.x - p1.x;
     const dy = p2.y - p1.y;
     return Math.sqrt(dx * dx + dy * dy);
+}
+
+// rectangle normalization
+export function normalizeRect(start: Point, end: Point): { x: number; y: number; width: number; height: number } {
+    const x = Math.min(start.x, end.x);
+    const y = Math.min(start.y, end.y);
+    const width = Math.abs(end.x - start.x);
+    const height = Math.abs(end.y - start.y);
+    return { x, y, width, height };
+}
+
+// rectangle intersection check
+export function doRectsIntersect(
+    rect1: { x: number; y: number; width: number; height: number },
+    rect2: { x: number; y: number; width: number; height: number }
+): boolean {
+    return !(
+        rect1.x + rect1.width < rect2.x ||
+        rect2.x + rect2.width < rect1.x ||
+        rect1.y + rect1.height < rect2.y ||
+        rect2.y + rect2.height < rect1.y
+    );
 }

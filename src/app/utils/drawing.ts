@@ -20,9 +20,6 @@ import {
     COLORS,
 } from './constants';
 
-/**
- * Draws the grid on the canvas
- */
 export function drawGrid(
     ctx: CanvasRenderingContext2D,
     width: number,
@@ -52,9 +49,6 @@ export function drawGrid(
     }
 }
 
-/**
- * Draws a room element
- */
 export function drawRoom(
     ctx: CanvasRenderingContext2D,
     room: Room,
@@ -97,9 +91,6 @@ export function drawRoom(
     );
 }
 
-/**
- * Draws a door element
- */
 export function drawDoor(
     ctx: CanvasRenderingContext2D,
     door: Door,
@@ -138,9 +129,6 @@ export function drawDoor(
     ctx.restore();
 }
 
-/**
- * Draws a window element
- */
 export function drawWindow(
     ctx: CanvasRenderingContext2D,
     window: Window,
@@ -178,9 +166,6 @@ export function drawWindow(
     ctx.restore();
 }
 
-/**
- * Draws a camera element
- */
 export function drawCamera(
     ctx: CanvasRenderingContext2D,
     camera: Camera,
@@ -220,9 +205,7 @@ export function drawCamera(
     ctx.restore();
 }
 
-/**
- * Draws a wall element
- */
+
 export function drawWall(
     ctx: CanvasRenderingContext2D,
     wall: Wall,
@@ -251,9 +234,7 @@ export function drawWall(
     }
 }
 
-/**
- * Draws a pencil path element
- */
+
 export function drawPencilPath(
     ctx: CanvasRenderingContext2D,
     path: PencilPath,
@@ -290,9 +271,6 @@ export function drawPencilPath(
     }
 }
 
-/**
- * Draws a text block element
- */
 export function drawTextBlock(
     ctx: CanvasRenderingContext2D,
     textBlock: TextBlock,

@@ -14,10 +14,12 @@ export default function App() {
     const autosaved = localStorage.getItem(AUTOSAVE_KEY);
     return autosaved ? JSON.parse(autosaved) : [];
   });
-  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
   const [zoom, setZoom] = useState<number>(1);
 
-  const selectedElement = elements.find((el) => el.id === selectedElementId) || null;
+  const selectedElement = selectedElementIds.length === 1
+    ? elements.find((el) => el.id === selectedElementIds[0]) || null
+    : null;
 
   // Auto-save to localStorage whenever elements change
   useEffect(() => {
@@ -27,16 +29,16 @@ export default function App() {
   const handleClear = () => {
     if (window.confirm('Are you sure you want to clear all elements?')) {
       setElements([]);
-      setSelectedElementId(null);
+      setSelectedElementIds([]);
     }
   };
 
   const handleRotateSelected = () => {
-    if (!selectedElementId) return;
+    if (selectedElementIds.length === 0) return;
 
     setElements((prev) =>
       prev.map((el) => {
-        if (el.id === selectedElementId && 'rotation' in el) {
+        if (selectedElementIds.includes(el.id) && 'rotation' in el) {
           return {
             ...el,
             rotation: (el.rotation) % 360,
@@ -92,9 +94,9 @@ export default function App() {
           break;
         case 'delete':
         case 'backspace':
-          if (selectedElementId) {
-            setElements((prev) => prev.filter((el) => el.id !== selectedElementId));
-            setSelectedElementId(null);
+          if (selectedElementIds.length > 0) {
+            setElements((prev) => prev.filter((el) => !selectedElementIds.includes(el.id)));
+            setSelectedElementIds([]);
           }
           break;
       }
@@ -102,7 +104,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [selectedElementId]);
+  }, [selectedElementIds]);
 
   // Track selected element changes from canvas
   useEffect(() => {
@@ -152,8 +154,8 @@ export default function App() {
             selectedTool={selectedTool}
             elements={elements}
             onElementsChange={setElements}
-            selectedElementId={selectedElementId}
-            onSelectedElementChange={setSelectedElementId}
+            selectedElementIds={selectedElementIds}
+            onSelectedElementChange={setSelectedElementIds}
             zoom={zoom}
             onZoomChange={setZoom}
           />

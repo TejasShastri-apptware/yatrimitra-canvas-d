@@ -9,6 +9,7 @@ import type {
   PencilPath,
   FloorPlanElement,
   FloorPlanCanvasProps,
+  MarqueeSelection,
 } from '../types/floorplan';
 
 // Re-export types for backward compatibility
@@ -25,7 +26,7 @@ export type {
 } from '../types/floorplan';
 
 // Import utilities
-import { snapToGrid, distance } from '../utils/geometry';
+import { snapToGrid, distance, normalizeRect } from '../utils/geometry';
 import {
   drawGrid,
   drawRoom,
@@ -36,7 +37,7 @@ import {
   drawPencilPath,
   drawTextBlock,
 } from '../utils/drawing';
-import { findElementAtPoint } from '../utils/selection';
+import { findElementAtPoint, findElementsInMarquee } from '../utils/selection';
 import {
   GRID_SIZE,
   DEFAULT_WALL_THICKNESS,
@@ -46,13 +47,14 @@ import {
   MIN_ZOOM,
   MAX_ZOOM,
   ZOOM_STEP,
+  MARQUEE_LINE_WIDTH,
 } from '../utils/constants';
 
 export function FloorPlanCanvas({
   selectedTool,
   elements,
   onElementsChange,
-  selectedElementId,
+  selectedElementIds = [],
   onSelectedElementChange,
   zoom = 1,
   onZoomChange,
@@ -62,13 +64,14 @@ export function FloorPlanCanvas({
   const [startPoint, setStartPoint] = useState<Point | null>(null);
   const [currentPoint, setCurrentPoint] = useState<Point | null>(null);
   const [pencilPoints, setPencilPoints] = useState<Point[]>([]);
-  const [selectedElement, setSelectedElement] = useState<string | null>(selectedElementId || null);
+  const [selectedElements, setSelectedElements] = useState<string[]>(selectedElementIds);
+  const [marqueeSelection, setMarqueeSelection] = useState<MarqueeSelection | null>(null);
   const [panOffset, setPanOffset] = useState<Point>({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState<Point | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPoint, setDragStartPoint] = useState<Point | null>(null);
-  const [draggedElementStartPos, setDraggedElementStartPos] = useState<any>(null);
+  const [draggedElementsStartPos, setDraggedElementsStartPos] = useState<Map<string, any>>(new Map());
 
   // Main rendering effect
   useEffect(() => {
@@ -91,7 +94,7 @@ export function FloorPlanCanvas({
 
     // Draw all elements
     elements.forEach((element) => {
-      const isSelected = element.id === selectedElement;
+      const isSelected = selectedElements.includes(element.id);
 
       switch (element.type) {
         case 'room':
@@ -169,7 +172,23 @@ export function FloorPlanCanvas({
       ctx.stroke();
       ctx.globalAlpha = 1;
     }
-  }, [elements, selectedElement, isDrawing, startPoint, currentPoint, selectedTool, panOffset, pencilPoints, zoom]);
+
+    // Draw marquee selection box
+    if (marqueeSelection?.isActive && marqueeSelection.startPoint && marqueeSelection.currentPoint) {
+      const marqueeRect = normalizeRect(marqueeSelection.startPoint, marqueeSelection.currentPoint);
+
+      ctx.strokeStyle = COLORS.marqueeStroke;
+      ctx.fillStyle = COLORS.marqueeFill;
+      ctx.lineWidth = MARQUEE_LINE_WIDTH;
+      ctx.setLineDash([5, 5]);
+
+      // Draw in screen coordinates (already includes pan and zoom)
+      ctx.strokeRect(marqueeRect.x, marqueeRect.y, marqueeRect.width, marqueeRect.height);
+      ctx.fillRect(marqueeRect.x, marqueeRect.y, marqueeRect.width, marqueeRect.height);
+
+      ctx.setLineDash([]);
+    }
+  }, [elements, selectedElements, isDrawing, startPoint, currentPoint, selectedTool, panOffset, pencilPoints, zoom, marqueeSelection]);
 
   const getCanvasPoint = (e: React.MouseEvent<HTMLCanvasElement>): Point => {
     const canvas = canvasRef.current;
@@ -193,25 +212,66 @@ export function FloorPlanCanvas({
 
     if (selectedTool === 'select') {
       const clicked = findElementAtPoint(point, elements, panOffset, zoom);
-      setSelectedElement(clicked ? clicked.id : null);
-      onSelectedElementChange?.(clicked ? clicked.id : null);
 
-      // Start dragging if an element is selected
       if (clicked) {
+        // Clicking on an element
+        if (e.shiftKey) {
+          // Shift+click: toggle element in selection
+          if (selectedElements.includes(clicked.id)) {
+            const newSelection = selectedElements.filter(id => id !== clicked.id);
+            setSelectedElements(newSelection);
+            onSelectedElementChange?.(newSelection);
+          } else {
+            const newSelection = [...selectedElements, clicked.id];
+            setSelectedElements(newSelection);
+            onSelectedElementChange?.(newSelection);
+          }
+        } else {
+          // Regular click: select single element (or keep multi-selection if clicking on already selected)
+          if (!selectedElements.includes(clicked.id)) {
+            setSelectedElements([clicked.id]);
+            onSelectedElementChange?.([clicked.id]);
+          }
+        }
+
+        // Start dragging all selected elements
         setIsDragging(true);
         setDragStartPoint(point);
-        // Store the original position of the element
-        if (clicked.type === 'room') {
-          setDraggedElementStartPos({ x: clicked.x, y: clicked.y });
-        } else if (clicked.type === 'wall') {
-          setDraggedElementStartPos({ x1: clicked.x1, y1: clicked.y1, x2: clicked.x2, y2: clicked.y2 });
-        } else if (clicked.type === 'pencil') {
-          setDraggedElementStartPos({ points: [...clicked.points] });
-        } else if (clicked.type === 'text') {
-          setDraggedElementStartPos({ x: clicked.x, y: clicked.y });
-        } else {
-          setDraggedElementStartPos({ x: clicked.x, y: clicked.y });
+
+        // Store initial positions for all selected elements
+        const elementsToStore = selectedElements.includes(clicked.id) ? selectedElements : [clicked.id];
+        const posMap = new Map();
+
+        elementsToStore.forEach(id => {
+          const el = elements.find(e => e.id === id);
+          if (!el) return;
+
+          if (el.type === 'room' || el.type === 'text') {
+            posMap.set(id, { x: el.x, y: el.y });
+          } else if (el.type === 'wall') {
+            posMap.set(id, { x1: el.x1, y1: el.y1, x2: el.x2, y2: el.y2 });
+          } else if (el.type === 'pencil') {
+            posMap.set(id, { points: [...el.points] });
+          } else {
+            // Door, Window, Camera
+            posMap.set(id, { x: el.x, y: el.y });
+          }
+        });
+
+        setDraggedElementsStartPos(posMap);
+      } else {
+        // Clicking on empty space - start marquee selection
+        if (!e.shiftKey) {
+          setSelectedElements([]);
+          onSelectedElementChange?.([]);
         }
+
+        // Start marquee
+        setMarqueeSelection({
+          startPoint: point,
+          currentPoint: point,
+          isActive: true,
+        });
       }
       return;
     }
@@ -269,39 +329,46 @@ export function FloorPlanCanvas({
       return;
     }
 
-    // Handle dragging selected element
-    if (isDragging && dragStartPoint && selectedElement && draggedElementStartPos) {
+    // Handle marquee selection tracking
+    if (marqueeSelection?.isActive) {
+      setMarqueeSelection({
+        ...marqueeSelection,
+        currentPoint: point,
+      });
+      return;
+    }
+
+    // Handle dragging selected elements
+    if (isDragging && dragStartPoint && draggedElementsStartPos.size > 0) {
       const deltaX = (point.x - dragStartPoint.x) / zoom;
       const deltaY = (point.y - dragStartPoint.y) / zoom;
 
       const updatedElements = elements.map((el) => {
-        if (el.id === selectedElement) {
-          if (el.type === 'room') {
-            return { ...el, x: draggedElementStartPos.x + deltaX, y: draggedElementStartPos.y + deltaY };
-          } else if (el.type === 'wall') {
-            return {
-              ...el,
-              x1: draggedElementStartPos.x1 + deltaX,
-              y1: draggedElementStartPos.y1 + deltaY,
-              x2: draggedElementStartPos.x2 + deltaX,
-              y2: draggedElementStartPos.y2 + deltaY,
-            };
-          } else if (el.type === 'pencil') {
-            return {
-              ...el,
-              points: draggedElementStartPos.points.map((p: Point) => ({
-                x: p.x + deltaX,
-                y: p.y + deltaY,
-              })),
-            };
-          } else if (el.type === 'text') {
-            return { ...el, x: draggedElementStartPos.x + deltaX, y: draggedElementStartPos.y + deltaY };
-          } else {
-            // Door, Window, Camera
-            return { ...el, x: draggedElementStartPos.x + deltaX, y: draggedElementStartPos.y + deltaY };
-          }
+        const startPos = draggedElementsStartPos.get(el.id);
+        if (!startPos) return el;
+
+        if (el.type === 'room' || el.type === 'text') {
+          return { ...el, x: startPos.x + deltaX, y: startPos.y + deltaY };
+        } else if (el.type === 'wall') {
+          return {
+            ...el,
+            x1: startPos.x1 + deltaX,
+            y1: startPos.y1 + deltaY,
+            x2: startPos.x2 + deltaX,
+            y2: startPos.y2 + deltaY,
+          };
+        } else if (el.type === 'pencil') {
+          return {
+            ...el,
+            points: startPos.points.map((p: Point) => ({
+              x: p.x + deltaX,
+              y: p.y + deltaY,
+            })),
+          };
+        } else {
+          // Door, Window, Camera
+          return { ...el, x: startPos.x + deltaX, y: startPos.y + deltaY };
         }
-        return el;
       });
 
       onElementsChange(updatedElements);
@@ -327,10 +394,35 @@ export function FloorPlanCanvas({
       return;
     }
 
+    // Finalize marquee selection
+    if (marqueeSelection?.isActive) {
+      const marqueeRect = normalizeRect(marqueeSelection.startPoint, marqueeSelection.currentPoint);
+
+      // Only select if marquee has some size
+      if (marqueeRect.width > 5 || marqueeRect.height > 5) {
+        const elementsInMarquee = findElementsInMarquee(marqueeRect, elements, panOffset, zoom);
+        const selectedIds = elementsInMarquee.map(el => el.id);
+
+        if (e.shiftKey) {
+          // Add to existing selection
+          const newSelection = [...new Set([...selectedElements, ...selectedIds])];
+          setSelectedElements(newSelection);
+          onSelectedElementChange?.(newSelection);
+        } else {
+          // Replace selection
+          setSelectedElements(selectedIds);
+          onSelectedElementChange?.(selectedIds);
+        }
+      }
+
+      setMarqueeSelection(null);
+      return;
+    }
+
     if (isDragging) {
       setIsDragging(false);
       setDragStartPoint(null);
-      setDraggedElementStartPos(null);
+      setDraggedElementsStartPos(new Map());
       return;
     }
 
@@ -391,10 +483,10 @@ export function FloorPlanCanvas({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Delete' || e.key === 'Backspace') {
-      if (selectedElement) {
-        onElementsChange(elements.filter((el) => el.id !== selectedElement));
-        setSelectedElement(null);
-        onSelectedElementChange?.(null);
+      if (selectedElements.length > 0) {
+        onElementsChange(elements.filter((el) => !selectedElements.includes(el.id)));
+        setSelectedElements([]);
+        onSelectedElementChange?.([]);
       }
     }
   };
