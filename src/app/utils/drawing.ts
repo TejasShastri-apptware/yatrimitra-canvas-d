@@ -56,6 +56,7 @@ export function drawRoom(
     isSelected: boolean,
     zoom: number = 1
 ): void {
+    ctx.save();
     const strokeColor = isSelected ? COLORS.selected : (room.color || COLORS.room);
     ctx.strokeStyle = strokeColor;
     ctx.fillStyle = room.color ? `${room.color}1a` : COLORS.roomFill; // Add transparency to custom colors
@@ -89,6 +90,7 @@ export function drawRoom(
         centerX,
         room.name ? centerY + 10 * zoom : centerY
     );
+    ctx.restore();
 }
 
 export function drawDoor(
@@ -213,6 +215,7 @@ export function drawWall(
     isSelected: boolean,
     zoom: number = 1
 ): void {
+    ctx.save();
     ctx.strokeStyle = isSelected ? COLORS.selected : (wall.color || COLORS.wall);
     ctx.lineWidth = wall.thickness;
     ctx.lineCap = 'round';
@@ -232,6 +235,7 @@ export function drawWall(
         ctx.arc(wall.x2 * zoom + panOffset.x, wall.y2 * zoom + panOffset.y, 4 * zoom, 0, Math.PI * 2);
         ctx.fill();
     }
+    ctx.restore();
 }
 
 
@@ -244,6 +248,7 @@ export function drawPencilPath(
 ): void {
     if (path.points.length < 2) return;
 
+    ctx.save();
     ctx.strokeStyle = isSelected ? COLORS.selected : path.color;
     ctx.lineWidth = isSelected ? path.lineWidth + 1 : path.lineWidth;
     ctx.lineCap = 'round';
@@ -269,6 +274,7 @@ export function drawPencilPath(
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
     }
+    ctx.restore();
 }
 
 export function drawTextBlock(
@@ -278,6 +284,7 @@ export function drawTextBlock(
     isSelected: boolean,
     zoom: number = 1
 ): void {
+    ctx.save();
     const x = textBlock.x * zoom + panOffset.x;
     const y = textBlock.y * zoom + panOffset.y;
     const fontSize = (textBlock.fontSize || 16) * zoom;
@@ -300,4 +307,5 @@ export function drawTextBlock(
         ctx.strokeRect(x - 2, y - 2, metrics.width + 4, fontSize + 4);
         ctx.setLineDash([]);
     }
+    ctx.restore();
 }
