@@ -12,15 +12,7 @@ interface PropertiesPanelProps {
 
 export function PropertiesPanel({ selectedElement, onUpdateElement }: PropertiesPanelProps) {
   if (!selectedElement) {
-    return (
-      <Card className="w-64 bg-slate-900 border-slate-700 p-4">
-        <div className="text-slate-400 text-sm text-center">
-          <p>No element selected</p>
-          <p className="text-xs mt-2">Select an element to view properties</p>
-          <p className="text-xs mt-4 text-blue-400">💡 Tip: Use Shift+Click or drag to select multiple elements</p>
-        </div>
-      </Card>
-    );
+    return null;
   }
 
   const handleChange = (field: string, value: number) => {

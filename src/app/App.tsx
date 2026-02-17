@@ -149,7 +149,7 @@ export default function App() {
       {/* Main Content */}
       <div className="flex-1 relative overflow-hidden">
         {/* Canvas Area */}
-        <div className="absolute inset-0 right-80">
+        <div className={`absolute inset-0 ${selectedElement ? 'right-80' : 'right-0'} `}>
           <FloorPlanCanvas
             selectedTool={selectedTool}
             elements={elements}
@@ -195,9 +195,14 @@ export default function App() {
         </div>
 
         {/* Properties Panel */}
-        <div className="absolute top-0 right-0 bottom-0 w-80 bg-slate-950 border-l border-slate-700 p-4 overflow-y-auto">
-          <PropertiesPanel selectedElement={selectedElement} onUpdateElement={handleUpdateElement} />
-        </div>
+        {selectedElement && (
+          <div className="absolute top-0 right-0 bottom-0 w-80 bg-slate-950 border-l border-slate-700 p-4 overflow-y-auto animate-in slide-in-from-right duration-300">
+            <PropertiesPanel
+              selectedElement={selectedElement}
+              onUpdateElement={handleUpdateElement}
+            />
+          </div>
+        )}
       </div>
 
       {/* Footer */}

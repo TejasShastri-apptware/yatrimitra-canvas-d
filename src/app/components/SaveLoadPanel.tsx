@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, Upload, Save, FolderOpen } from 'lucide-react';
+import { Download, Upload, Save, FolderOpen, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import type { FloorPlanElement } from '../types/floorplan';
 import {
@@ -66,7 +66,7 @@ export function SaveLoadPanel({ elements, onLoadElements }: SaveLoadPanelProps) 
       setIsOpenLoad(false);
     }
     onLoadElements(diagram.elements);
-      setIsOpenLoad(false);
+    setIsOpenLoad(false);
   };
 
   const handleDeleteDiagram = (index: number) => {
@@ -123,50 +123,50 @@ export function SaveLoadPanel({ elements, onLoadElements }: SaveLoadPanelProps) 
   return (
     <>
       <DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <Button
-      variant="ghost"
-      size="sm"
-      className="h-10 text-slate-300 hover:text-white hover:bg-slate-800"
-    >
-      <FolderOpen className="h-4 w-4" />
-      <span className="ml-2">File</span>
-    </Button>
-  </DropdownMenuTrigger>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-10 text-slate-300 hover:text-white hover:bg-slate-800"
+          >
+            <FolderOpen className="h-4 w-4" />
+            <span className="ml-2">File</span>
+          </Button>
+        </DropdownMenuTrigger>
 
-  <DropdownMenuContent className="w-48">
-    <DropdownMenuLabel>File</DropdownMenuLabel>
+        <DropdownMenuContent className="w-48">
+          <DropdownMenuLabel>File</DropdownMenuLabel>
 
-    <DropdownMenuItem onSelect={() => setIsOpenSave(true)}>
-      <Save className="h-4 w-4" />
-      <span className="ml-2">Save to Browser</span>
-    </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setIsOpenSave(true)}>
+            <Save className="h-4 w-4" />
+            <span className="ml-2">Save to Browser</span>
+          </DropdownMenuItem>
 
-    <DropdownMenuItem onSelect={() => setIsOpenLoad(true)}>
-      <FolderOpen className="h-4 w-4" />
-      <span className="ml-2">Load from Browser</span>
-    </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setIsOpenLoad(true)}>
+            <FolderOpen className="h-4 w-4" />
+            <span className="ml-2">Load from Browser</span>
+          </DropdownMenuItem>
 
-    <DropdownMenuSeparator />
+          <DropdownMenuSeparator />
 
-    <DropdownMenuItem
-      onSelect={handleExportToFile}
-      disabled={elements.length === 0}
-    >
-      <Download className="h-4 w-4" />
-      <span className="ml-2">Download Diagram</span>
-    </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={handleExportToFile}
+            disabled={elements.length === 0}
+          >
+            <Download className="h-4 w-4" />
+            <span className="ml-2">Download Diagram</span>
+          </DropdownMenuItem>
 
-    <DropdownMenuItem
-      onSelect={() =>
-        document.getElementById("file-import-input")?.click()
-      }
-    >
-      <Upload className="h-4 w-4" />
-      <span className="ml-2">Import Diagram</span>
-    </DropdownMenuItem>
-  </DropdownMenuContent>
-</DropdownMenu>
+          <DropdownMenuItem
+            onSelect={() =>
+              document.getElementById("file-import-input")?.click()
+            }
+          >
+            <Upload className="h-4 w-4" />
+            <span className="ml-2">Import Diagram</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
 
 
@@ -182,13 +182,90 @@ export function SaveLoadPanel({ elements, onLoadElements }: SaveLoadPanelProps) 
       {/* Keep Dialogs Below */}
       <Dialog open={isOpenSave} onOpenChange={setIsOpenSave}>
         <DialogContent className="bg-slate-900 border-slate-700 text-white">
-          ...
+          <DialogHeader>
+            <DialogTitle>Save Diagram</DialogTitle>
+            <DialogDescription>
+              Enter a name for your diagram and save it to your browser.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <Label htmlFor="diagram-name">Diagram Name</Label>
+            <Input
+              id="diagram-name"
+              value={diagramName}
+              onChange={(e) => setDiagramName(e.target.value)}
+              placeholder="Enter diagram name"
+            />
+          </div>
+          <div className="mt-4 flex justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setIsOpenSave(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveToBrowser}
+            >
+              Save
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isOpenLoad} onOpenChange={setIsOpenLoad}>
-        <DialogContent className="bg-slate-900 border-slate-700 text-white">
-          ...
+        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle>Load Diagram</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Select a previously saved diagram from your browser storage.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-4 max-h-[300px] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+            {savedDiagrams.length === 0 ? (
+              <p className="text-center py-8 text-slate-500 italic">No saved diagrams found.</p>
+            ) : (
+              savedDiagrams.map((diagram, index) => (
+                <div
+                  key={`${diagram.name}-${index}`}
+                  className="flex items-center justify-between p-3 rounded-lg border border-slate-700 bg-slate-800/50 hover:bg-slate-800 transition-colors"
+                >
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="font-medium truncate">{diagram.name}</span>
+                    <span className="text-xs text-slate-500">
+                      {new Date(diagram.date).toLocaleDateString()} at {new Date(diagram.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2 ml-4">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-8 px-3"
+                      onClick={() => handleLoadFromBrowser(diagram)}
+                    >
+                      Load
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-8 w-8 p-0"
+                      onClick={() => handleDeleteDiagram(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <Button variant="outline" onClick={() => setIsOpenLoad(false)}>
+              Close
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </>

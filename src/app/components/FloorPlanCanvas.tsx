@@ -12,7 +12,6 @@ import type {
   MarqueeSelection,
 } from '../types/floorplan';
 
-// Re-export types for backward compatibility
 export type {
   Tool,
   Point,
