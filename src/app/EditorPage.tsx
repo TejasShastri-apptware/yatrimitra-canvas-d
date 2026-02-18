@@ -195,7 +195,7 @@ export default function EditorPage() {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={() => navigate('/')}
+                            onClick={() => navigate(-1)}
                             className="text-slate-400 hover:text-white transition-colors"
                             title="Back to Dashboard"
                         >
