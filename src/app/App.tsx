@@ -5,6 +5,7 @@ import Login from "./mainpages/Login";
 import ProtectedRoute from "./mainpages/ProtectedRoute";
 import PostDashboard from "./mainpages/PostDashboard";
 import PostDashboardWrapper from "./mainpages/PostDashboardWrapper";
+import ViewPage from "./mainpages/ViewPage";
 
 export default function App() {
   return (
@@ -35,6 +36,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <PostDashboardWrapper />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/view/:id"
+          element={
+            <ProtectedRoute>
+              <ViewPage />
             </ProtectedRoute>
           }
         />
