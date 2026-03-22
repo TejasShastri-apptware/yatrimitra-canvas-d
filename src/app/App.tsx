@@ -7,7 +7,7 @@ import PostDashboard from "./mainpages/PostDashboard";
 import PostDashboardWrapper from "./mainpages/PostDashboardWrapper";
 import ViewPage from "./mainpages/ViewPage";
 import LostAndFound from "./mainpages/LostAndFound";
-import RTSPStream from "./streaming/RTSPViewer";
+// import RTSPStream from "./streaming/RTSPViewer";
 
 export default function App() {
   return (
@@ -60,14 +60,14 @@ export default function App() {
           }
         />
 
-        <Route
+        {/* <Route
           path = '/stream'
           element = {
             <ProtectedRoute>
               <RTSPStream />
             </ProtectedRoute>
           }
-        />
+        /> */}
       </Routes>
     </Router>
   );
