@@ -99,7 +99,7 @@ export default function Login() {
 
                     <footer className="mt-10 pt-6 border-t border-slate-800/50">
                         <p className="text-center text-slate-500 text-xs">
-                            Secure Encrypted Gateway
+                            I'll implement actual auth based on what Sir.KP says
                         </p>
                     </footer>
                 </div>

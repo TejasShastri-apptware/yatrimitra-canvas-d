@@ -23,13 +23,14 @@ const Dashboard = () => {
 
     const handleDelete = (id, e) => {
         e.stopPropagation();
-        if (window.confirm('Are you sure you want to delete this blueprint?')) {
+        {
             const savedDiagrams = JSON.parse(localStorage.getItem('diagrams') || '[]')
             const filtered = savedDiagrams.filter(d => d.id !== id)
             localStorage.setItem('diagrams', JSON.stringify(filtered))
             setDiagrams(filtered)
         }
     }
+
 
     const filteredDiagrams = useMemo(() => {
         let result = diagrams.filter(d =>
@@ -77,6 +78,10 @@ const Dashboard = () => {
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 8v4l3 3" /><circle cx="12" cy="12" r="10" /></svg>
                             Recent
+                        </button>
+                        <button onClick={() => navigate("/lostandfound")} className='w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-slate-200'>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 8v4l3 3" /><circle cx="12" cy="12" r="10" /></svg>
+                            Lost & Found
                         </button>
                     </nav>
                 </div>

@@ -15,6 +15,9 @@ export interface Room {
     name?: string;
     color?: string;
     cameraIds?: string[];
+    redAlertCapacity?: number;
+    orangeAlertCapacity?: number;
+    currentPopulation?: number;
 }
 
 export interface Door {
@@ -40,6 +43,7 @@ export interface Camera {
     y: number;
     rotation: number;
     roomId?: string;
+    rtspUrl?: string;
 }
 
 export interface Wall {

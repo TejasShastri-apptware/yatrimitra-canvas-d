@@ -8,7 +8,7 @@ import { MIN_ZOOM, MAX_ZOOM, ZOOM_STEP } from './utils/constants';
 
 const DIAGRAMS_KEY = 'diagrams';
 
-export default function EditorPage() {
+const EditorPage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [selectedTool, setSelectedTool] = useState<Tool>('select');
@@ -71,8 +71,6 @@ export default function EditorPage() {
         }
         setIsLoaded(true);
     }, [id, navigate]);
-
-    // Auto-save to localStorage whenever elements change
 
     // Auto-save to localStorage whenever elements change
     useEffect(() => {
@@ -188,6 +186,8 @@ export default function EditorPage() {
         return () => window.removeEventListener('keydown', handleKeyPress);
     }, [selectedElementIds]);
 
+    const handleView = () => navigate(`/post/${id}`);
+
     return (
         <div className="h-screen flex flex-col bg-slate-950">
             {/* Header */}
@@ -195,7 +195,7 @@ export default function EditorPage() {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={() => navigate(-1)}
+                            onClick={() => handleView()}
                             className="text-slate-400 hover:text-white transition-colors"
                             title="Back to Dashboard"
                         >
@@ -273,3 +273,6 @@ export default function EditorPage() {
         </div>
     );
 }
+
+
+export default EditorPage;

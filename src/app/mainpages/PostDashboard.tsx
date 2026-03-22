@@ -52,7 +52,7 @@ const PostDashboard = ({ diagram, onEdit, onView }: PostDashboardProps) => {
                 <div className="sticky top-0 z-50 bg-slate-950">
                     <header className="border-b-[0.2px] border-slate-500 flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2 pb-4 ">
                     <div className="p-8">
-                        <div className="flex items-center gap-2 mb-3">
+                        <div className="flex items-center gap-2 mb-1">
                             <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded">
                                 YatriMitra Camera Dashboard
                             </span>
@@ -72,7 +72,7 @@ const PostDashboard = ({ diagram, onEdit, onView }: PostDashboardProps) => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3 p-10">
+                    <div className="flex items-center gap-3 p-10 pt-1">
                         <button
                             onClick={handleView}
                             className="group flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-slate-300 bg-slate-900/50 border border-slate-800 rounded-xl hover:bg-slate-800 hover:text-white hover:border-slate-700 transition-all duration-200"
@@ -97,16 +97,43 @@ const PostDashboard = ({ diagram, onEdit, onView }: PostDashboardProps) => {
                         const roomCameras = camerasByRoom[room.id] || [];
                         if (roomCameras.length === 0) return null;
 
+                        const alertStatus = room.currentPopulation !== undefined && room.redAlertCapacity !== undefined && room.currentPopulation >= room.redAlertCapacity 
+                            ? 'red' 
+                            : room.currentPopulation !== undefined && room.orangeAlertCapacity !== undefined && room.currentPopulation >= room.orangeAlertCapacity 
+                                ? 'orange' 
+                                : 'normal';
+
                         return (
                             <div key={room.id}>
-                                <div className="flex items-center gap-3 mb-6">
-                                    <h2 className="text-xl font-medium text-blue-400 text-[25px] uppercase tracking-widest px-2">
-                                        {room.name ?? "Unnamed Room, Room ID : " + room.id}
-                                    </h2>
+                                <div className="flex items-center gap-6 mb-6">
+                                    <div className="flex items-center gap-4">
+                                        <h2 className="text-xl font-medium text-blue-400 text-[25px] uppercase tracking-widest px-2">
+                                            {room.name ?? "Unnamed Room, Room ID : " + room.id}
+                                        </h2>
+                                        {alertStatus !== 'normal' && (
+                                            <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${
+                                                alertStatus === 'red' 
+                                                ? 'bg-red-500/10 border-red-500/50 text-red-500' 
+                                                : 'bg-orange-500/10 border-orange-500/50 text-orange-500'
+                                            }`}>
+                                                <span className={`w-2 h-2 rounded-full ${
+                                                    alertStatus === 'red' ? 'bg-red-500 animate-pulse' : 'bg-orange-500'
+                                                }`} />
+                                                <span className="text-[10px] font-bold uppercase tracking-wider">
+                                                    {alertStatus === 'red' ? 'Red Alert' : 'Orange Alert'}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {room.currentPopulation !== undefined && (
+                                            <span className="text-slate-500 text-sm font-mono bg-slate-800/50 px-2 py-0.5 rounded border border-slate-700">
+                                                Pop: {room.currentPopulation}
+                                            </span>
+                                        )}
+                                    </div>
                                     <div className="h-px flex-1 bg-slate-600"></div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                     {roomCameras.map(camera => (
                                         <CamCard
                                             key={camera.id}
@@ -125,7 +152,7 @@ const PostDashboard = ({ diagram, onEdit, onView }: PostDashboardProps) => {
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="h-px flex-1 bg-slate-800"></div>
                                 <h2 className="text-xl font-medium text-slate-400 uppercase tracking-widest px-4">
-                                    Unassigned / External
+                                    External / Unassigned
                                 </h2>
                                 <div className="h-px flex-1 bg-slate-800"></div>
                             </div>
@@ -188,7 +215,7 @@ const PostDashboard = ({ diagram, onEdit, onView }: PostDashboardProps) => {
                                 <div className="bg-slate-800/40 p-6 rounded-xl border border-slate-700/50">
                                     <div className="space-y-6">
                                         <div>
-                                            <p className="mb-10 mt-4 text-slate-400 text-xs text-white uppercase tracking-widest mb-1">ID : {selectedCamera.id}</p>
+                                            <p className="mb-4 mt-4 text-white uppercase tracking-widest text-[10px] opacity-60">ID : {selectedCamera.id}</p>
                                             <p className="text-slate-400 text-xs uppercase tracking-widest mb-1">Status</p>
                                             <div className="flex items-center gap-2">
                                                 <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
@@ -205,6 +232,21 @@ const PostDashboard = ({ diagram, onEdit, onView }: PostDashboardProps) => {
                                             <p className="text-slate-400 text-xs uppercase tracking-widest mb-1">Rotation Angle</p>
                                             <p className="text-white font-mono text-lg">{selectedCamera.rotation}°</p>
                                         </div>
+                                        {selectedCamera.rtspUrl && (
+                                            <div>
+                                                <p className="text-slate-400 text-xs uppercase tracking-widest mb-1">RTSP Stream URL</p>
+                                                <div className="bg-black/40 p-3 rounded border border-slate-700 flex items-center gap-2">
+                                                    <code className="text-blue-400 text-xs break-all flex-1">{selectedCamera.rtspUrl}</code>
+                                                    <button 
+                                                        onClick={() => navigator.clipboard.writeText(selectedCamera.rtspUrl || '')}
+                                                        className="text-slate-500 hover:text-white transition-colors"
+                                                        title="Copy to clipboard"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -212,7 +254,7 @@ const PostDashboard = ({ diagram, onEdit, onView }: PostDashboardProps) => {
                             {/* Stream Column (Spans 8/12) */}
                             <div className="lg:col-span-8 order-1 lg:order-2">
                                 <div className="w-full aspect-video bg-black rounded-xl border border-slate-800 relative overflow-hidden group shadow-inner">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 to-transparent"></div>
+                                    <div className="absolute inset-0 bg-linear-to-br from-blue-900/10 to-transparent"></div>
 
                                     {/* Stream UI Overlay */}
                                     <div className="absolute top-4 left-4 flex items-center gap-3">

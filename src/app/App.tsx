@@ -6,6 +6,8 @@ import ProtectedRoute from "./mainpages/ProtectedRoute";
 import PostDashboard from "./mainpages/PostDashboard";
 import PostDashboardWrapper from "./mainpages/PostDashboardWrapper";
 import ViewPage from "./mainpages/ViewPage";
+import LostAndFound from "./mainpages/LostAndFound";
+import RTSPStream from "./streaming/RTSPViewer";
 
 export default function App() {
   return (
@@ -45,6 +47,24 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ViewPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/lostandfound"
+          element={
+            <ProtectedRoute>
+              <LostAndFound />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path = '/stream'
+          element = {
+            <ProtectedRoute>
+              <RTSPStream />
             </ProtectedRoute>
           }
         />

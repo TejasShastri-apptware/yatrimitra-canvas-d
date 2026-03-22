@@ -95,6 +95,42 @@ export function PropertiesPanel({ selectedElement, onUpdateElement }: Properties
                 className="bg-slate-800 border-slate-700 h-10"
               />
             </div>
+
+            <div className="pt-2 border-t border-slate-700 mt-4">
+              <Label className="text-blue-400 text-[10px] uppercase font-bold mb-2 block">Zone Analytics</Label>
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-slate-400 text-xs mb-1">Red-Alert Capacity</Label>
+                  <Input
+                    type="number"
+                    value={selectedElement.redAlertCapacity || ''}
+                    onChange={(e) => onUpdateElement({ ...selectedElement, redAlertCapacity: Number(e.target.value) })}
+                    placeholder="Threshold for red alert"
+                    className="bg-slate-800 border-slate-700 text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-slate-400 text-xs mb-1">Orange-Alert Capacity</Label>
+                  <Input
+                    type="number"
+                    value={selectedElement.orangeAlertCapacity || ''}
+                    onChange={(e) => onUpdateElement({ ...selectedElement, orangeAlertCapacity: Number(e.target.value) })}
+                    placeholder="Threshold for orange alert"
+                    className="bg-slate-800 border-slate-700 text-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-slate-400 text-xs mb-1">Current Population</Label>
+                  <Input
+                    type="number"
+                    value={selectedElement.currentPopulation || ''}
+                    onChange={(e) => onUpdateElement({ ...selectedElement, currentPopulation: Number(e.target.value) })}
+                    placeholder="Current count"
+                    className="bg-slate-800 border-slate-700 text-white"
+                  />
+                </div>
+              </div>
+            </div>
           </>
         )}
 
@@ -225,6 +261,19 @@ export function PropertiesPanel({ selectedElement, onUpdateElement }: Properties
         }
         className="bg-slate-800 border-slate-700 text-white"
         step={45}
+      />
+    </div>
+
+    <div>
+      <Label className="text-slate-300 text-xs mb-1">RTSP URL</Label>
+      <Input
+        type="text"
+        value={selectedElement.rtspUrl || ''}
+        onChange={(e) =>
+          onUpdateElement({ ...selectedElement, rtspUrl: e.target.value })
+        }
+        placeholder="rtsp://..."
+        className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
       />
     </div>
     </>
